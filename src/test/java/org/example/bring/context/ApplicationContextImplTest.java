@@ -41,7 +41,7 @@ class ApplicationContextImplTest {
     @Test
     void getBeanByNameTest() {
         SenderService httpSender = applicationContext.getBean("httpSender", SenderService.class);
-        assertEquals("http test", httpSender.sendMessage("test"));
+        assertEquals("http Hello", httpSender.sendMessage());
     }
 
     @Test

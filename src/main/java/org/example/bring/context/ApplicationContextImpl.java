@@ -1,11 +1,14 @@
 package org.example.bring.context;
 
+import org.example.bring.annotation.Autowired;
 import org.example.bring.annotation.Bean;
 import org.example.bring.exception.NoSuchBeanException;
 import org.example.bring.exception.NoUniqueBeanException;
 import org.reflections.Reflections;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +20,24 @@ public class ApplicationContextImpl implements ApplicationContext {
         Reflections reflections = new Reflections(basePackage);
         Set<Class<?>> typesToBeInstantiated = reflections.getTypesAnnotatedWith(Bean.class);
         createBeans(typesToBeInstantiated);
+        injectBeans();
+    }
+
+    private void injectBeans() {
+        context.values()
+                .forEach(bean -> Arrays.stream(bean.getClass().getDeclaredFields())
+                        .filter(field -> field.isAnnotationPresent(Autowired.class))
+                        .forEach(field -> inject(bean, field)));
+    }
+
+    private void inject(Object bean, Field field) {
+        try {
+            Object objectToInject = getBean(field.getType());
+            field.setAccessible(true);
+            field.set(bean, objectToInject);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
